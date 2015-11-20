@@ -32,14 +32,15 @@ from random import randint
 ################################################################
 
 # Initialize world
-name = "Cat Fun. Press the mouse (but not too fast)!"
-width = 500
-height = 500
+name = "Orbit Simulation. Click the Mouse to Set the Center of the Orbit"
+width = 1000
+height = 1000
 rw.newDisplay(width, height, name)
 ################################################################
 
 # Display the state by drawing a cat at that x coordinate
 myimage = dw.loadImage("rsz_planet.jpg")
+star = dw.loadImage("star.jpg")
 
 # state -> image (IO)
 # draw the cat halfway up the screen (height/2) and at the x
@@ -48,7 +49,7 @@ myimage = dw.loadImage("rsz_planet.jpg")
 def updateDisplay(state):
     dw.fill(dw.black)
     dw.draw(myimage, (state[0], state[1]))
-
+    dw.draw(star, (state[6], state[7]))
 
 ################################################################
 
@@ -99,7 +100,6 @@ def handleEvent(state, event):
         ydis = (Cpoint[1]-y)
         theta = math.atan(xdis/ydis)
         r = (((xdis)**2 + (ydis)**2)**(1/2.0))
-        print (theta)
         return (state[0],state[1],theta,theta,state[4],r,Cpoint[0],Cpoint[1])
     else:
         return(state)
@@ -109,9 +109,9 @@ def handleEvent(state, event):
 # World state will be single x coordinate at left edge of world
 
 # The cat starts at the left, moving right 
-initState = (250,250,0,0,.05,0,0,0)
+initState = (500,500,randint(-2,2),randint(-2,2),.01,0,2000,20000)
 
 # Run the simulation no faster than 60 frames per second
-frameRate = 30
+frameRate = 60
 # Run the simulation!
 rw.runWorld(initState, updateDisplay, updateState, handleEvent, endState, frameRate)
