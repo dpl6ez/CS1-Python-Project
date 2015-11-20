@@ -1,3 +1,4 @@
+import math
 import runWorld as rw
 import drawWorld as dw
 import pygame as pg
@@ -35,11 +36,10 @@ name = "Cat Fun. Press the mouse (but not too fast)!"
 width = 500
 height = 500
 rw.newDisplay(width, height, name)
-
 ################################################################
 
 # Display the state by drawing a cat at that x coordinate
-myimage = dw.loadImage("cat.bmp")
+myimage = dw.loadImage("rsz_planet.jpg")
 
 # state -> image (IO)
 # draw the cat halfway up the screen (height/2) and at the x
@@ -59,7 +59,10 @@ def updateDisplay(state):
 #
 # state -> state
 def updateState(state):
-    return((state[0]+state[2],state[1]+state[3],state[2],state[3]))
+    if (state[5] != 0):
+        return(state[6] + state[5]*math.cos(-1*state[2]),state[7] + state[5]*math.sin(-1*state[3]),state[2]+state[4],state[3]+state[4],state[4],state[5],state[6],state[7])
+    else:
+        return((state[0]+state[2],state[1]+state[3],state[2],state[3],state[4],0))
 
 ################################################################
 
@@ -67,8 +70,8 @@ def updateState(state):
 # that is, when pos is less then zero or greater than the screen width
 # state -> bool
 def endState(state):
-    if (state[0] > width or state[0] < 0 or state[1] > height or state[1] < 0):
-        state = (250,250,1,1)
+    if pg.event.EventType == pg.QUIT:
+        return True
     else:
         return False
 
@@ -89,14 +92,15 @@ def endState(state):
 def handleEvent(state, event):  
 #    print("Handling event: " + str(event))
     if (event.type == pg.MOUSEBUTTONDOWN):
-         centP = (pg.mouse.get_pos())
-         a = centP[0]
-         b = centP[1]
-         t = 0
-         while (t < 10):
-             a = (a - 200)
-             t = (t + 1)
-             return (a, b, 0, -2)
+        Cpoint = pg.mouse.get_pos()
+        x = state[0]
+        y = state[1]
+        xdis = (Cpoint[0]-x)
+        ydis = (Cpoint[1]-y)
+        theta = math.atan(xdis/ydis)
+        r = (((xdis)**2 + (ydis)**2)**(1/2.0))
+        print (theta)
+        return (state[0],state[1],theta,theta,state[4],r,Cpoint[0],Cpoint[1])
     else:
         return(state)
 
@@ -105,11 +109,9 @@ def handleEvent(state, event):
 # World state will be single x coordinate at left edge of world
 
 # The cat starts at the left, moving right 
-initState = (randint(0,499),randint(0,499),randint(-2,2),randint(-2,2))
+initState = (250,250,0,0,.05,0,0,0)
 
 # Run the simulation no faster than 60 frames per second
-frameRate = 10
-
+frameRate = 30
 # Run the simulation!
-rw.runWorld(initState, updateDisplay, updateState, handleEvent,
-            endState, frameRate)
+rw.runWorld(initState, updateDisplay, updateState, handleEvent, endState, frameRate)
