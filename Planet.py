@@ -6,31 +6,6 @@ from random import randint
 
 ################################################################
 
-# This program is an interactive simulation/game. A cat starts
-# to move across the screen. The direction of movement is reversed
-# on each "mouse down" event.
-#
-# The state of the cat is represented by a tuple (pos, delta-pos).
-# The first element, pos, represents the x-coordinate of the cat.
-# The second element, delta-pos, represents the amount that the
-# position changes on each iteration of the simulation loop.
-#
-# For example, the tuple (7,1) would represent the cat at x-coord,
-# 7, and moving to the right by 1 pixel per "clock tick."
-# 
-# The initial state of the cat in this program is (0,1), meaning that the cat
-# starts at the left of the screen and moves right one pixel per tick.
-#
-# Pressing a mouse button down while this simulation run updates the cat state
-# by leaving pos unchanged but reversing delta-pos (changing 1 to -1 and vice
-# versa). That is, pressing a mouse key reverses the direction of the
-# cat.
-#
-# The simulation ends when the cat is allowed to reach either the left
-# or the right edge of the screen.
-
-################################################################
-
 # Initialize world
 name = "Orbit Simulation. Click the Mouse to Set the Center of the Orbit"
 width = 1000
@@ -39,37 +14,47 @@ rw.newDisplay(width, height, name)
 ################################################################
 
 # Display the state by drawing a cat at that x coordinate
+background = dw.loadImage("background.jpg")
 myimage = dw.loadImage("rsz_planet.jpg")
 star = dw.loadImage("star.jpg")
 
 # state -> image (IO)
-# draw the cat halfway up the screen (height/2) and at the x
-# coordinate given by the first component of the state tuple
-#
+#draws a star field as the background
+#draws the planet at the x and y coordinates given by state[0] and state[1]
+#draws the star at the coordinates given by state[6] and state [7] -25
+#pixels to center the star on the mouse as opposed to drawing it off center
 def updateDisplay(state):
     dw.fill(dw.black)
-    dw.draw(myimage, (state[0], state[1]))
-    dw.draw(star, (state[6], state[7]))
+    dw.draw(background, (0,0,))
+    dw.draw(myimage, (state[0]-10, state[1]-10))
+    dw.draw(star, (state[6]-25, state[7]-25))
 
 ################################################################
 
-# Change pos by delta-pos, leaving delta-pos unchanged
-# Note that pos is accessed as state[0], and delta-pos
-# as state[1]. Later on we'll see how to access state
-# components by name (as we saw with records in Idris).
+# Update state is contorlled based on whether or not an r value other
+# than zero has been assigned. If r is zero, update state keeps the
+# state the same as it is initially, outside of updating state[0] and
+# state[1] using the values in state[2] and state[3]. This moves the
+# planet across the screen at a constant velocity. However, if
+# handleEvent assigns a non-zero r value, update state now uses the
+# first set of state values. Now the position of the star is set by the
+# position of the mouse click, state[6] and state[7]. The position of
+# the planet is determined by the radious of the orbit (state[5])
+# multiplied by cos[theta + t]. t is detrmined by state[2] and
+# state[3], which both increase at a constant rate. This causes the
+# cos and sin values to return to values that give the planet a
+# circular motion
 #
 # state -> state
 def updateState(state):
     if (state[5] != 0):
         return(state[6] + state[5]*math.cos(-1*state[2]),state[7] + state[5]*math.sin(-1*state[3]),state[2]+state[4],state[3]+state[4],state[4],state[5],state[6],state[7])
     else:
-        return((state[0]+state[2],state[1]+state[3],state[2],state[3],state[4],0))
+        return((state[0]+state[2],state[1]+state[3],state[2],state[3],state[4],0,2000,2000))
 
 ################################################################
 
-# Terminate the simulation when the x coord reaches the screen edge,
-# that is, when pos is less then zero or greater than the screen width
-# state -> bool
+# Terminate the program when the x in the top corner is pressed
 def endState(state):
     if pg.event.EventType == pg.QUIT:
         return True
@@ -79,19 +64,20 @@ def endState(state):
     
 ################################################################
 
-# We handle each event by printing (a serialized version of) it on the console
-# and by then responding to the event. If the event is not a "mouse button down
-# event" we ignore it by just returning the current state unchanged. Otherwise
-# we return a new state, with pos the same as in the original state, but
-# delta-pos reversed: if the cat was moving right, we update delta-pos so that
-# it moves left, and vice versa. Each mouse down event changes the cat
-# direction. The game is to keep the cat alive by not letting it run off the
-# edge of the screen.
+# When the mouse button is pressed, a number of variables are
+# calculated. The Position of the moouse assigns the Cpoint, which is
+# where the sun is drawn. The current x and y location of the planet
+# is assigned to x and y for further calculations. The xdis and ydis
+# are calculated from the Cpoint and x and y values, giving the
+# distance from the sun to planet. These values are used to calculated
+# r, the radius of the planets orbit. Finally, theta, the initial
+# point on the circle the planet should be drawn at is calcualted
+# using the x distance and the y distance. All of these values are
+# stores in state so they can be used in updateState
 #
 # state -> event -> state
 #
-def handleEvent(state, event):  
-#    print("Handling event: " + str(event))
+def handleEvent(state, event):    
     if (event.type == pg.MOUSEBUTTONDOWN):
         Cpoint = pg.mouse.get_pos()
         x = state[0]
@@ -106,10 +92,10 @@ def handleEvent(state, event):
 
 ################################################################
 
-# World state will be single x coordinate at left edge of world
-
-# The cat starts at the left, moving right 
-initState = (500,500,randint(-2,2),randint(-2,2),.01,0,2000,20000)
+# The planet starts at 500,500 and start moving in a random
+# direction. The T value is .01, there r value is zero and the initial
+# position of the star is offscreen
+initState = (500,500,randint(-2,2),randint(-2,2),.01,0,2000,2000)
 
 # Run the simulation no faster than 60 frames per second
 frameRate = 60
